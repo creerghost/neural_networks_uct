@@ -1,0 +1,10 @@
+python cifar_pooling.py --epochs=60 --batch_size=128
+python cifar_pooling.py --epochs=60 --batch_size=128 --arch="no_stride_in_1st_layer"
+python cifar_pooling.py --epochs=60 --batch_size=128 --arch="miss_2nd_layer"
+python cifar_pooling.py --epochs=60 --batch_size=128 --arch="batchNorm"
+python cifar_pooling.py --epochs=60 --batch_size=128 --arch="maxpooling"
+python cifar_pooling.py --epochs=60 --batch_size=128 --arch="avgpooling"
+python cifar_pooling.py --epochs=60 --batch_size=128 --arch="another_convpooling"
+python cifar_pooling.py --epochs=60 --batch_size=128 --arch="another_full_convpooling"
+python cifar_pooling.py --epochs=60 --batch_size=128 --arch="maxpooling+batchNorm"
+python cifar_pooling.py --epochs=60 --batch_size=128 --arch="another_full_convpooling+batchNorm"
