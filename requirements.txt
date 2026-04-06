@@ -4,3 +4,5 @@ torchvision
 matplotlib
 scikit-learn
 tensorboard
+PyQt5
+gymnasium

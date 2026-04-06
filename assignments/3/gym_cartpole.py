@@ -11,10 +11,10 @@ os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 import numpy as np
 import torch
 import torch.nn as nn
+import torch.optim as optim
 from torch.utils.data import TensorDataset, DataLoader
 from torch.utils.tensorboard import SummaryWriter
 import time
-
 
 parser = argparse.ArgumentParser()
 
@@ -27,8 +27,8 @@ parser.add_argument("--seed", default=42, type=int, help="Random seed.")
 parser.add_argument("--model", default="gym_cartpole_model.pt", type=str, help="Output model path.")
 
 # TODO: Add other arguments for the parser if you want.
-parser.add_argument("--batch_size", default=None, type=int, help="Batch size.")
-parser.add_argument("--epochs", default=None, type=int, help="Number of epochs.")
+parser.add_argument("--batch_size", default=7, type=int, help="Batch size.")
+parser.add_argument("--epochs", default=150, type=int, help="Number of epochs.")
 parser.add_argument("--final_layer", default="softmax", choices=["softmax", "sigmoid"], help="Final layer type.")
 
 
@@ -68,7 +68,7 @@ def evaluate_model(model, seed=42, episodes=100, render=False, report_per_episod
             done = terminated or truncated
 
         total_score += score
-        if report_per_episode:
+        if report_per_episode and episode % 10 == 0:
             print("The episode {} finished with score {}.".format(episode + 1, score))
     return total_score / episodes
 
@@ -122,20 +122,20 @@ def main(args):
 
         train_loader = DataLoader(observations_dataset, batch_size=args.batch_size, shuffle=True)
 
-        # TODO: Create the model in the `model` variable. Note that
-        # the model can perform any of:
-        # - binary classification with 1 output (targeted for potential subsequent sigmoid activation);
-        # - two-class classification with 2 outputs (targeted for potential subsequent softmax activation).
         # Create the model
         model = nn.Sequential()
         
         input_size = observations.shape[1]
         
-        ...
+        model.append(nn.Linear(input_size, 16))
+        model.append(nn.ReLU())
         
-        input_size = ...
-
-
+        input_size = 16
+        # 1. Training dataset is small, 1 hidden layer suits the best
+        # 2. Small batch size will add gradient noise, helping the optimizer to generalize better
+        # 3. Adam optimizer suited the best for this task to handle the noisy gradient updates
+        # 4. Weight decay of 1e-3 was best for this task
+        # 5. Number of epochs was increased due to lower learning rate and small batch size
         if args.final_layer=="softmax":
             model.append(nn.Linear(input_size, 2))
         elif args.final_layer == "sigmoid":
@@ -153,10 +153,13 @@ def main(args):
         model.to(device)
 
 
-        # TODO: Select loss and optimizer.
-        
-        criterion = ...
-        optimizer = ...
+        # Select loss and optimizer.
+        if args.final_layer == "softmax":
+            criterion = nn.CrossEntropyLoss()
+        else:
+            criterion = nn.BCEWithLogitsLoss()
+            
+        optimizer = optim.Adam(model.parameters(), lr=0.005, weight_decay=1e-3)
 
         # TensorBoard writer initialization
         writer = SummaryWriter(logdir)
@@ -167,7 +170,8 @@ def main(args):
         model.train()
 
         for epoch in range(args.epochs):
-            print(f'Epoch {epoch + 1}/{args.epochs}:')
+            if epoch % 10 == 0:
+                print(f'Epoch {epoch + 1}/{args.epochs}:')
             # Training
             start_time = time.time()
             train_loss, train_correct = 0, 0
@@ -198,8 +202,8 @@ def main(args):
             writer.add_scalar("Accuracy/train", train_acc, epoch)
             writer.flush()
 
-            print(
-                f'train_loss: {train_loss:.4f} - train_acc: {train_acc:.4f} - train_time: {train_time:.4f} s')
+            if epoch % 100 == 0:
+                print(f'train_loss: {train_loss:.4f} - train_acc: {train_acc:.4f} - train_time: {train_time:.4f} s')
 
         writer.close()
 
