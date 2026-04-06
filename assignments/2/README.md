@@ -42,6 +42,7 @@ AI was used to discuss the design of the main window layout, figure out how to p
 
 ## Sources
 - [Learn Python PyQt5 in 1 hour](https://www.youtube.com/watch?v=92zx_U9Nzf4)
+- [QPainter documentation](https://doc.qt.io/qt-6/qpainter.html)
 - [NumPy cheatsheet - GeeksforGeeks](https://www.geeksforgeeks.org/numpy-cheat-sheet/)
 - [Learing PyTorch with Examples](https://docs.pytorch.org/tutorials/beginner/pytorch_with_examples.html)
 - [pytorch-examples - GitHub](https://github.com/jcjohnson/pytorch-examples)

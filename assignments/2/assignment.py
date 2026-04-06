@@ -23,7 +23,7 @@ class DynamicModel(nn.Module):
         layers.
         """
         super().__init__()
-        layers = []
+        layers: list[nn.Module] = []
         in_features = 2  # Coordinates (x, y)
 
         for hidden in hidden_layers:
@@ -52,9 +52,10 @@ class Canvas(QWidget):
         list and background image placeholder.
         """
         super().__init__(parent)
-        self.points = []  # List of (x, y, target_class)
+        # List of (x, y, target_class). 0 for RED and 1 for BLUE.
+        self.points: list[tuple[int, int, int]] = []
         self.setFixedSize(400, 400)
-        self.bg_image = None
+        self.bg_image: QImage | None = None
 
     def mousePressEvent(self, event) -> None:
         """
@@ -62,11 +63,9 @@ class Canvas(QWidget):
         Left-click places a RED point (Class 0), right-click places a BLUE
         point (Class 1).
         """
-        x = event.x()
-        y = event.y()
+        x: int = event.x()
+        y: int = event.y()
 
-        # Left click -> Class 0 (RED)
-        # Right click -> Class 1 (BLUE)
         if 0 <= x < self.width() and 0 <= y < self.height():
             if event.button() == Qt.LeftButton:
                 self.points.append((x, y, 0))
@@ -82,12 +81,12 @@ class Canvas(QWidget):
         if not self.points:
             return None, None
 
-        X = []
-        y = []
-        for px, py, cls in self.points:
+        X: list[list[float]] = []
+        y: list[int] = []
+        for px, py, color in self.points:
             # Normalize inputs into [0, 1] range based on canvas size
             X.append([px / self.width(), py / self.height()])
-            y.append(cls)
+            y.append(color)
 
         return (torch.tensor(X, dtype=torch.float32),
                 torch.tensor(y, dtype=torch.long))
@@ -113,29 +112,29 @@ class Canvas(QWidget):
 
         # Batch evaluation
         batch_size = 10000
-        preds = []
+        predictions = []
         model.eval()
         with torch.no_grad():
             for i in range(0, len(tensor_grid), batch_size):
                 batch = tensor_grid[i:i+batch_size]
                 out = model(batch)
                 prob = torch.softmax(out, dim=1)
-                preds.append(prob)
+                predictions.append(prob)
 
-        preds = torch.cat(preds, dim=0).numpy()
+        predictions = torch.cat(predictions, dim=0).numpy()
 
-        # Convert predictions to RGB map
+        # Predictions to RGB map
         image_data = np.zeros((h, w, 3), dtype=np.uint8)
 
-        probs_r = preds[:, 0].reshape(h, w)
-        probs_b = preds[:, 1].reshape(h, w)
+        probs_r = predictions[:, 0].reshape(h, w)
+        probs_b = predictions[:, 1].reshape(h, w)
 
-        image_data[:, :, 0] = np.clip(probs_r * 255, 0, 255)  # Red channel
-        image_data[:, :, 1] = 0                               # Green channel
-        image_data[:, :, 2] = np.clip(probs_b * 255, 0, 255)  # Blue channel
+        image_data[:, :, 0] = np.clip(probs_r * 255, 0, 255)  # R
+        image_data[:, :, 1] = 0                               # G
+        image_data[:, :, 2] = np.clip(probs_b * 255, 0, 255)  # B
 
         qimage = QImage(image_data.data, w, h, w * 3, QImage.Format_RGB888)
-        self.bg_image = qimage.copy()  # Deep copy is necessary
+        self.bg_image = qimage.copy()
         self.update()
 
     def paintEvent(self, event) -> None:
@@ -150,9 +149,8 @@ class Canvas(QWidget):
         else:
             painter.fillRect(self.rect(), Qt.white)
 
-        # Draw training points
-        for x, y, cls in self.points:
-            color = Qt.red if cls == 0 else Qt.blue
+        for x, y, color in self.points:
+            color = Qt.red if color == 0 else Qt.blue
             painter.setBrush(QBrush(color))
             painter.setPen(QPen(Qt.black, 1))
             painter.drawEllipse(x - 4, y - 4, 8, 8)
@@ -170,8 +168,8 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle("NN UCT Assignment 2")
 
-        self.model = None
-        self.optimizer = None
+        self.model: DynamicModel | None = None
+        self.optimizer: optim.Adam | None = None
         self.criterion = nn.CrossEntropyLoss()
 
         self.init_ui()
@@ -219,9 +217,9 @@ class MainWindow(QMainWindow):
         classification.
         """
         try:
-            layers_str = self.layers_box.text()
+            layers_str: str = self.layers_box.text()
             if not layers_str.strip():
-                hidden_layers = []
+                hidden_layers: list[int] = []
             else:
                 hidden_layers = [int(x.strip()) for x in layers_str.split(',')]
 
@@ -248,7 +246,7 @@ class MainWindow(QMainWindow):
             return
 
         try:
-            epochs = int(self.epochs_box.text())
+            epochs: int = int(self.epochs_box.text())
         except ValueError:
             QMessageBox.warning(self, "Error", "Invalid number of epochs.")
             return
