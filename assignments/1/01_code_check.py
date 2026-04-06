@@ -17,7 +17,7 @@ import types
 # ============================================================
 # TODO: SET YOUR SUBMITTED FILENAME HERE (without the .py extension)
 # ============================================================
-SUBMISSION_FILENAME = "mnist_layers_activations_stdev2"
+SUBMISSION_FILENAME = "mnist_layers_activations"
 # ============================================================
 
 def make_default_args():
