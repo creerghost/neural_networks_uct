@@ -1,5 +1,5 @@
 # Assignment 2
-
+*This project has been created as a part of the Neural Networks course at UCT Prague by Vladimir Nikolaev*
 ## Initial Plan
 The goal of this assignment is to build an interactive app that uses PyTorch for deep learning and PyQt5 for the graphical user interface (GUI).
 The plan is to:
