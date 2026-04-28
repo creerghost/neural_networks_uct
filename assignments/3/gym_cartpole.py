@@ -1,3 +1,10 @@
+""" 
+    1. Training dataset is small, 1 hidden layer suits the best
+    2. Small batch size will add gradient noise, helping the optimizer to generalize better
+    3. Adam optimizer suited the best for this task to handle the noisy gradient updates
+    4. Weight decay of 1e-3 was best for this task
+    5. Number of epochs was increased due to lower learning rate and small batch size
+"""
 #!/usr/bin/env python3
 # file: gym_cartpole.py
 import argparse
@@ -131,11 +138,6 @@ def main(args):
         model.append(nn.ReLU())
         
         input_size = 16
-        # 1. Training dataset is small, 1 hidden layer suits the best
-        # 2. Small batch size will add gradient noise, helping the optimizer to generalize better
-        # 3. Adam optimizer suited the best for this task to handle the noisy gradient updates
-        # 4. Weight decay of 1e-3 was best for this task
-        # 5. Number of epochs was increased due to lower learning rate and small batch size
         if args.final_layer=="softmax":
             model.append(nn.Linear(input_size, 2))
         elif args.final_layer == "sigmoid":
@@ -170,7 +172,7 @@ def main(args):
         model.train()
 
         for epoch in range(args.epochs):
-            if epoch % 10 == 0:
+            if (epoch + 1) % 10 == 0:
                 print(f'Epoch {epoch + 1}/{args.epochs}:')
             # Training
             start_time = time.time()
