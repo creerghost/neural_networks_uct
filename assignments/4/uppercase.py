@@ -23,12 +23,12 @@ from uppercase_data import UppercaseData
 # TODO: Set reasonable values for the hyperparameters, especially for
 # `alphabet_size`, `batch_size`, `epochs`, and `window`.
 parser = argparse.ArgumentParser()
-parser.add_argument("--alphabet_size", default=None, type=int, help="If given, use this many most frequent chars.")
-parser.add_argument("--batch_size", default=None, type=int, help="Batch size.")
-parser.add_argument("--epochs", default=None, type=int, help="Number of epochs.")
+parser.add_argument("--alphabet_size", default=62, type=int, help="If given, use this many most frequent chars.")
+parser.add_argument("--batch_size", default=512, type=int, help="Batch size.")
+parser.add_argument("--epochs", default=5, type=int, help="Number of epochs.")
 parser.add_argument("--seed", default=42, type=int, help="Random seed.")
 parser.add_argument("--threads", default=0, type=int, help="Maximum number of threads to use.")
-parser.add_argument("--window", default=None, type=int, help="Window size to use.")
+parser.add_argument("--window", default=20, type=int, help="Window size to use.")
 
 def train_model(model, device, train_loader, dev_loader, optimizer, scheduler, criterion, writer, init_epoch, epochs):
 
@@ -45,7 +45,7 @@ def train_model(model, device, train_loader, dev_loader, optimizer, scheduler, c
         num_batches = len(train_loader)
         for batch_idx, (images, labels) in enumerate(train_loader):
             optimizer.zero_grad()
-            images, labels = images.to(device), labels.to(device)
+            images, labels = images.to(device), labels.to(device, dtype=torch.long)
             outputs = model(images)
             loss = criterion(outputs, labels)
 
@@ -77,7 +77,7 @@ def train_model(model, device, train_loader, dev_loader, optimizer, scheduler, c
             val_loss, val_correct = 0, 0
             num_batches = len(dev_loader)
             for batch_idx, (images, labels) in enumerate(dev_loader):
-                images, labels = images.to(device), labels.to(device)
+                images, labels = images.to(device), labels.to(device, dtype=torch.long)
                 outputs = model(images)
                 loss = criterion(outputs, labels)
 
@@ -112,7 +112,7 @@ def eval_model(model, device, test_loader, criterion, writer, epoch):
         test_loss, test_correct = 0, 0
         num_batches = len(test_loader)
         for batch_idx, (images, labels) in enumerate(test_loader):
-            images, labels = images.to(device), labels.to(device)
+            images, labels = images.to(device), labels.to(device, dtype=torch.long)
             outputs = model(images)
             loss = criterion(outputs, labels)
 
@@ -170,31 +170,28 @@ def predict_model(model, device, data_loader):
 #   implementation of one-hot encoding followed by a Linear layer) and flatten afterwards.
 
 class SimpleNN(nn.Module):
-    def __init__(self, input_size, alphabet_size_used, ...):
+    def __init__(self, input_size, alphabet_size_used):
         super().__init__()
         self.alphabet_size_used = alphabet_size_used
-
+        self.embedding = nn.Embedding(alphabet_size_used, 32)
         self.flatten = nn.Flatten()
-        input_size *= alphabet_size_used
-
-        ...
-        # self.hidden =
-        # input_size =
-
-
-        self.fc_output = nn.Linear(input_size, 2)
-        # self.softmax = nn.Softmax(dim=1) # dim=0 is for batch size, we do not need softmax, because we use nn.CrossEntropyLoss
+        
+        self.hidden = nn.Sequential(
+            nn.Linear(input_size * 32, 256),
+            nn.ReLU(),
+            nn.Dropout(0.3),
+            nn.Linear(256, 128),
+            nn.ReLU(),
+            nn.Dropout(0.3)
+        )
+        
+        self.fc_output = nn.Linear(128, 2)
 
     def forward(self, x):
-        x = torch.nn.functional.one_hot(x.long(), self.alphabet_size).float()
+        x = self.embedding(x.long())
         x = self.flatten(x)
-
-        ...
-        # x = self.hidden(x)
-
-
+        x = self.hidden(x)
         x = self.fc_output(x)
-        # x = self.softmax(x)
         return x
 
 
@@ -231,7 +228,7 @@ def main(args):
         break
 
     # Get cpu, gpu or mps device for training
-    if args.device is None:
+    if getattr(args, "device", None) is None:
         device = (
             "cuda"
             if torch.cuda.is_available()
@@ -261,11 +258,9 @@ def main(args):
 
     model.to(device)
 
-    # TODO: Select the loss and the optimizer
-    ...
-    # criterion = ...
-    # optimizer = ...
-    # scheduler = ...
+    criterion = nn.CrossEntropyLoss()
+    optimizer = optim.AdamW(model.parameters(), lr=0.002)
+    scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs)
 
     # TensorBoard writer initialization
     writer = SummaryWriter(logdir)
@@ -291,7 +286,7 @@ def main(args):
 
     # TODO: If your model is not too tied to other python objects, you can save it 
     # (serialize it) using `torch.save` function.
-    ...
+    torch.save(model.state_dict(), os.path.join(logdir, "uppercase_model.pt"))
 
     # If something goes really wrong, save at least the model weights.
     
