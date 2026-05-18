@@ -55,8 +55,8 @@ from uppercase_data import UppercaseData
 #
 # ==================================================================
 MODEL_PATH         = "model.pt"     # <-- CHANGE to your saved model path
-WINDOW             = None           # <-- CHANGE to the window value used during training  (e.g. 5)
-ALPHABET_SIZE      = None           # <-- CHANGE to the --alphabet_size_used arg from training, or leave None
+WINDOW             = 20          # <-- CHANGE to the window value used during training  (e.g. 5)
+ALPHABET_SIZE      = 62           # <-- CHANGE to the --alphabet_size_used arg from training, or leave None
 BATCH_SIZE         = 256            # batch size for evaluation (does not affect accuracy)
 # ==================================================================
 

@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
 # file: uppercase.py
+"""
+- Replaced one-hot encoding with nn.Embedding(alphabet_size, 32) for dense character representation.
+- Implemented SimpleNN as a deep MLP (Flatten -> Linear(256) -> ReLU -> Dropout(0.3) -> Linear(128) -> ReLU -> Dropout(0.3) -> Linear(2)).
+- Set optimal hyperparameter defaults (window=20, alphabet_size=62, batch_size=512, epochs=5).
+- Configured AdamW optimizer and CosineAnnealingLR scheduler.
+"""
 import argparse
 import datetime
 import os
@@ -286,7 +292,7 @@ def main(args):
 
     # TODO: If your model is not too tied to other python objects, you can save it 
     # (serialize it) using `torch.save` function.
-    torch.save(model.state_dict(), os.path.join(logdir, "uppercase_model.pt"))
+    torch.save(model, os.path.join(logdir, "uppercase_model.pt"))
 
     # If something goes really wrong, save at least the model weights.
 
