@@ -16,6 +16,7 @@ from torch.utils.data import DataLoader
 import time
 
 from cifar10 import CIFAR10
+from torchvision import transforms
 
 # ==================================================================
 # TODO: SET YOUR MODEL PATH AND PARAMETERS HERE
@@ -203,6 +204,7 @@ def main():
     print("--- Preparing data ---")
     try:
         cifar10 = CIFAR10()
+        
         train_loader = DataLoader(cifar10.train, batch_size=args.batch_size, shuffle=False)
         dev_loader = DataLoader(cifar10.dev, batch_size=args.batch_size, shuffle=False)
         print(f"[PASS] CIFAR10 data loaded.")

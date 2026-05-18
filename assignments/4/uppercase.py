@@ -175,7 +175,7 @@ class SimpleNN(nn.Module):
         self.alphabet_size_used = alphabet_size_used
         self.embedding = nn.Embedding(alphabet_size_used, 32)
         self.flatten = nn.Flatten()
-        
+
         self.hidden = nn.Sequential(
             nn.Linear(input_size * 32, 256),
             nn.ReLU(),
@@ -184,7 +184,7 @@ class SimpleNN(nn.Module):
             nn.ReLU(),
             nn.Dropout(0.3)
         )
-        
+
         self.fc_output = nn.Linear(128, 2)
 
     def forward(self, x):
@@ -206,9 +206,9 @@ def main(args):
     if args.threads > 0:
         torch.set_num_threads(args.threads)
         torch.set_num_interop_threads(args.threads)
-    
+
     assert(args.batch_size is not None)
-    
+
     # Create logdir name
     logdir = os.path.join("logs", "{}-{}-{}".format(
         os.path.basename(globals().get("__file__", "notebook")),
@@ -289,7 +289,7 @@ def main(args):
     torch.save(model.state_dict(), os.path.join(logdir, "uppercase_model.pt"))
 
     # If something goes really wrong, save at least the model weights.
-    
+
     #
     # Generate correctly capitalized dev and test set.
     # Use `uppercase_data.test.text` as input, capitalize suitable characters,
