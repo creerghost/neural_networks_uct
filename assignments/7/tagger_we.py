@@ -26,11 +26,11 @@ print("Num GPUs Available: ", torch.cuda.device_count())
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--batch_size", default=10, type=int, help="Batch size.")
-parser.add_argument("--epochs", default=5, type=int, help="Number of epochs.")
+parser.add_argument("--batch_size", default=64, type=int, help="Batch size.")
+parser.add_argument("--epochs", default=15, type=int, help="Number of epochs.")
 parser.add_argument("--max_sentences", default=None, type=int, help="Maximum number of sentences to load.")
 parser.add_argument("--rnn_cell", default="LSTM", choices=["LSTM", "GRU"], help="RNN cell type.")
-parser.add_argument("--rnn_cell_dim", default=64, type=int, help="RNN cell dimension.")
+parser.add_argument("--rnn_cell_dim", default=512, type=int, help="RNN cell dimension.")
 parser.add_argument("--seed", default=42, type=int, help="Random seed.")
 parser.add_argument("--threads", default=1, type=int, help="Maximum number of threads to use.")
 parser.add_argument("--we_dim", default=128, type=int, help="Word embedding dimension.")
@@ -196,7 +196,7 @@ class SimpleNN(nn.Module):
         self.word_embedding = nn.Embedding(forms_count, we_dim, padding_idx=MorphoDataset.PAD)
 
         rnn_class = nn.LSTM if rnn_cell == "LSTM" else (nn.GRU if rnn_cell == "GRU" else nn.RNN)
-        self.word_rnn = rnn_class(we_dim, rnn_cell_dim, bidirectional=True, batch_first=True)
+        self.word_rnn = rnn_class(we_dim, rnn_cell_dim, num_layers=2, dropout=0.3, bidirectional=True, batch_first=True)
 
         self.rnn_cell_dim = rnn_cell_dim
 
